@@ -693,7 +693,7 @@ export default function App() {
   };
 
   const handleAuthSubmit = () => {
-    const passwords = { master: '71207179', teacher: '26350' };
+    const passwords = { master: 'MS104', teacher: '26350' };
     if (showPasswordInput === 'student') {
       const found = students.find(s => s.studentCode && s.studentCode.trim() === studentCodeInput.trim());
       if (found) { handleLogin('student', found.id); setShowPasswordInput(null); }
