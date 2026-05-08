@@ -4881,12 +4881,15 @@ export default function App() {
                         </div>
                         {newAssignment.type === 'individual' && (() => {
                           const groups = ['A','B','C','D','E'].filter(g => students.some(s => s.group === g));
-                          const toggleGroup = (g) => {
-                            const inGroup = students.filter(s => s.group === g).map(s => s.id);
-                            const allSelected = inGroup.every(id => newAssignment.targetStudents.includes(id));
+                          const grades = [...new Set(students.map(s=>s.grade).filter(Boolean))].sort();
+                          const schools = [...new Set(students.map(s=>s.highSchool).filter(Boolean))].sort();
+                          const midClasses = middleClasses;
+
+                          const toggleIds = (ids) => {
+                            const allSel = ids.every(id => newAssignment.targetStudents.includes(id));
                             let next = [...newAssignment.targetStudents];
-                            if (allSelected) next = next.filter(id => !inGroup.includes(id));
-                            else inGroup.forEach(id => { if (!next.includes(id)) next.push(id); });
+                            if (allSel) next = next.filter(id => !ids.includes(id));
+                            else ids.forEach(id => { if (!next.includes(id)) next.push(id); });
                             setNewAssignment({ ...newAssignment, targetStudents: next });
                           };
                           const toggleAll = () => {
@@ -4896,25 +4899,59 @@ export default function App() {
                           };
                           return (
                             <div className="space-y-2">
-                              {/* 그룹 빠른선택 버튼 */}
-                              {groups.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5">
-                                  <button onClick={toggleAll}
-                                    className="px-2.5 py-1.5 rounded-lg text-[10px] font-black border-2 border-slate-200 text-slate-500 bg-white hover:border-indigo-300 hover:text-indigo-600 transition-all leading-none">
-                                    전체선택
-                                  </button>
-                                  {groups.map(g => {
-                                    const inGroup = students.filter(s => s.group === g).map(s => s.id);
-                                    const allSel = inGroup.every(id => newAssignment.targetStudents.includes(id));
-                                    return (
-                                      <button key={g} onClick={() => toggleGroup(g)}
-                                        className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black border-2 transition-all leading-none ${allSel ? 'bg-amber-500 border-amber-500 text-white' : 'border-amber-200 text-amber-600 bg-white hover:border-amber-400'}`}>
-                                        그룹 {g} ({inGroup.length}명)
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              )}
+                              {/* 빠른선택 버튼 */}
+                              <div className="flex flex-wrap gap-1.5">
+                                {/* 전체 */}
+                                <button onClick={toggleAll}
+                                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-black border-2 border-slate-200 text-slate-500 bg-white hover:border-indigo-300 transition-all leading-none">
+                                  전체선택
+                                </button>
+                                {/* 학년별 */}
+                                {grades.map(g => {
+                                  const ids = students.filter(s=>s.grade===g).map(s=>s.id);
+                                  const allSel = ids.length > 0 && ids.every(id=>newAssignment.targetStudents.includes(id));
+                                  return (
+                                    <button key={g} onClick={()=>toggleIds(ids)}
+                                      className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black border-2 transition-all leading-none ${allSel?'bg-sky-500 border-sky-500 text-white':'border-sky-200 text-sky-600 bg-white hover:border-sky-400'}`}>
+                                      {g} ({ids.length}명)
+                                    </button>
+                                  );
+                                })}
+                                {/* 학교별 */}
+                                {schools.map(sch => {
+                                  const ids = students.filter(s=>s.highSchool===sch).map(s=>s.id);
+                                  const allSel = ids.length > 0 && ids.every(id=>newAssignment.targetStudents.includes(id));
+                                  return (
+                                    <button key={sch} onClick={()=>toggleIds(ids)}
+                                      className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black border-2 transition-all leading-none ${allSel?'bg-teal-500 border-teal-500 text-white':'border-teal-200 text-teal-600 bg-white hover:border-teal-400'}`}>
+                                      {sch} ({ids.length}명)
+                                    </button>
+                                  );
+                                })}
+                                {/* 중등반별 */}
+                                {midClasses.map(mc => {
+                                  const ids = students.filter(s=>s.middleClassId===mc.id).map(s=>s.id);
+                                  if (!ids.length) return null;
+                                  const allSel = ids.every(id=>newAssignment.targetStudents.includes(id));
+                                  return (
+                                    <button key={mc.id} onClick={()=>toggleIds(ids)}
+                                      className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black border-2 transition-all leading-none ${allSel?'bg-violet-500 border-violet-500 text-white':'border-violet-200 text-violet-600 bg-white hover:border-violet-400'}`}>
+                                      {mc.name} ({ids.length}명)
+                                    </button>
+                                  );
+                                })}
+                                {/* 그룹별 */}
+                                {groups.length > 0 && groups.map(g => {
+                                  const ids = students.filter(s=>s.group===g).map(s=>s.id);
+                                  const allSel = ids.every(id=>newAssignment.targetStudents.includes(id));
+                                  return (
+                                    <button key={g} onClick={()=>toggleIds(ids)}
+                                      className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black border-2 transition-all leading-none ${allSel?'bg-amber-500 border-amber-500 text-white':'border-amber-200 text-amber-600 bg-white hover:border-amber-400'}`}>
+                                      그룹{g} ({ids.length}명)
+                                    </button>
+                                  );
+                                })}
+                              </div>
                               {/* 학생 개별 선택 그리드 */}
                               <div className="p-3 bg-slate-50 rounded-2xl border shadow-inner">
                                 <div className="grid grid-cols-2 gap-1.5">
