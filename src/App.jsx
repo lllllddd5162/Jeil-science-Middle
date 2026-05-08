@@ -502,6 +502,7 @@ export default function App() {
   const [studentNotes, setStudentNotes] = useState({});
   const [studentScoreData, setStudentScoreData] = useState({});
   const [subjects, setSubjects] = useState(['물리', '화학', '생명과학', '지구과학', '통합과학']);
+
   const [editingSubjects, setEditingSubjects] = useState(false);
   const [subjectInput, setSubjectInput] = useState('');
   const [progressPlans, setProgressPlans] = useState([]);
@@ -522,8 +523,6 @@ export default function App() {
   // 중등: 반 목록 (Firebase에서 로드)
   const [middleClasses, setMiddleClasses] = useState([]); // [{id, name, grade}]
   const [activeMiddleClass, setActiveMiddleClass] = useState(null);
-  const [addingMiddleClass, setAddingMiddleClass] = useState(false);
-  const [newMiddleClassName, setNewMiddleClassName] = useState('');
   const [matrixStatusFilter, setMatrixStatusFilter] = useState('all'); // 'all' | 'incomplete' | 'completed'
   const [collapsedStudents, setCollapsedStudents] = useState({}); // 모바일 학생 접기
   const [hiddenStudents, setHiddenStudents] = useState({}); // 모바일 학생 on/off
@@ -563,7 +562,7 @@ export default function App() {
   const [statusMenu, setStatusMenu] = useState(null);
 
   const [editStudentId, setEditStudentId] = useState(null);
-  const [editStudentData, setEditStudentData] = useState({ name: '', studentCode: '', homeroomTeacher: '', highSchool: '', group: '', classroomId: '', grade: '', middleClassId: '' });
+  const [editStudentData, setEditStudentData] = useState({ name: '', studentCode: '', homeroomTeacher: '', highSchool: '', group: '', classroomId: '', grade: '', middleClassId: '', schoolGrade: '' });
   const [editItemId, setEditItemId] = useState(null);
   const [editItemData, setEditItemData] = useState(null);
 
@@ -695,7 +694,7 @@ export default function App() {
   };
 
   const handleAuthSubmit = () => {
-    const passwords = { master: 'MS104', teacher: '26350' };
+    const passwords = { master: '71207179', teacher: '26350' };
     if (showPasswordInput === 'student') {
       const found = students.find(s => s.studentCode && s.studentCode.trim() === studentCodeInput.trim());
       if (found) { handleLogin('student', found.id); setShowPasswordInput(null); }
@@ -1262,28 +1261,31 @@ export default function App() {
                   </button>
                 ))}
                 {/* 반 추가/삭제 버튼 - master만 */}
-                {userRole === 'master' && !addingMiddleClass && (
-                  <button onClick={() => setAddingMiddleClass(true)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-black border-2 border-dashed border-slate-300 text-slate-400 hover:border-slate-400 hover:text-slate-600 transition-all">
-                    + 반 추가
-                  </button>
-                )}
-                {userRole === 'master' && addingMiddleClass && (
-                  <div className="flex items-center gap-1">
-                    <input value={newMiddleClassName} onChange={e=>setNewMiddleClassName(e.target.value)}
-                      onKeyDown={async e => {
-                        if (e.key==='Enter' && newMiddleClassName.trim()) {
-                          await setDoc(doc(db,'artifacts',appId,'public','data','middleClasses','mc'+Date.now()), { name: newMiddleClassName.trim(), grade: gradeTab, sortOrder: middleClasses.length }, {merge:true});
-                          setNewMiddleClassName(''); setAddingMiddleClass(false);
-                        }
-                        if (e.key==='Escape') { setAddingMiddleClass(false); setNewMiddleClassName(''); }
-                      }}
-                      placeholder="반 이름..." autoFocus
-                      className="px-2.5 py-1.5 rounded-xl text-xs font-bold border-2 border-indigo-300 outline-none w-28 text-slate-700"/>
-                    <button onClick={async()=>{ if(newMiddleClassName.trim()) { await setDoc(doc(db,'artifacts',appId,'public','data','middleClasses','mc'+Date.now()),{name:newMiddleClassName.trim(),grade:gradeTab,sortOrder:middleClasses.length},{merge:true}); setNewMiddleClassName(''); setAddingMiddleClass(false); }}} className="px-2 py-1.5 rounded-xl bg-indigo-500 text-white text-xs font-black">+</button>
-                    <button onClick={()=>{ setAddingMiddleClass(false); setNewMiddleClassName(''); }} className="px-2 py-1.5 rounded-xl bg-slate-100 text-slate-500 text-xs font-black">✕</button>
-                  </div>
-                )}
+                {userRole === 'master' && (() => {
+                  const [addingClass, setAddingClass] = React.useState(false);
+                  const [newClassName, setNewClassName] = React.useState('');
+                  return addingClass ? (
+                    <div className="flex items-center gap-1">
+                      <input value={newClassName} onChange={e=>setNewClassName(e.target.value)}
+                        onKeyDown={async e => {
+                          if (e.key==='Enter' && newClassName.trim()) {
+                            await setDoc(doc(db,'artifacts',appId,'public','data','middleClasses','mc'+Date.now()), { name: newClassName.trim(), grade: gradeTab, sortOrder: middleClasses.length }, {merge:true});
+                            setNewClassName(''); setAddingClass(false);
+                          }
+                          if (e.key==='Escape') setAddingClass(false);
+                        }}
+                        placeholder="반 이름..." autoFocus
+                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold border-2 border-indigo-300 outline-none w-28 text-slate-700"/>
+                      <button onClick={async()=>{ if(newClassName.trim()) { await setDoc(doc(db,'artifacts',appId,'public','data','middleClasses','mc'+Date.now()),{name:newClassName.trim(),grade:gradeTab,sortOrder:middleClasses.length},{merge:true}); setNewClassName(''); setAddingClass(false); }}} className="px-2 py-1.5 rounded-xl bg-indigo-500 text-white text-xs font-black">+</button>
+                      <button onClick={()=>setAddingClass(false)} className="px-2 py-1.5 rounded-xl bg-slate-100 text-slate-500 text-xs font-black">✕</button>
+                    </div>
+                  ) : (
+                    <button onClick={()=>setAddingClass(true)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-black border-2 border-dashed border-slate-300 text-slate-400 hover:border-slate-400 hover:text-slate-600 transition-all">
+                      + 반 추가
+                    </button>
+                  );
+                })()}
                 {/* 현재 반 삭제 */}
                 {userRole === 'master' && activeMiddleClass && (
                   <button onClick={async()=>{ if(confirm('이 반을 삭제할까요?')) { await deleteDoc(doc(db,'artifacts',appId,'public','data','middleClasses',activeMiddleClass)); setActiveMiddleClass(null); }}}
@@ -3161,7 +3163,13 @@ export default function App() {
                           <div className="space-y-1 text-left leading-none"><label className="text-[10px] text-slate-400 font-black leading-none">이름</label><input value={editStudentData.name} onChange={(e) => setEditStudentData({ ...editStudentData, name: e.target.value })} className="w-full px-3 py-2 border rounded-xl font-bold text-sm bg-slate-50 text-slate-800 outline-none shadow-sm focus:border-indigo-500 leading-none" /></div>
                           <div className="space-y-1 text-left leading-none"><label className="text-[10px] text-slate-400 font-black leading-none">코드</label><input value={editStudentData.studentCode} onChange={(e) => setEditStudentData({ ...editStudentData, studentCode: e.target.value })} className="w-full px-3 py-2 border rounded-xl font-bold text-sm bg-slate-50 text-slate-800 outline-none shadow-sm focus:border-indigo-500 leading-none" /></div>
                           <div className="space-y-1 text-left leading-none"><label className="text-[10px] text-slate-400 font-black leading-none">담임</label><input value={editStudentData.homeroomTeacher} onChange={(e) => setEditStudentData({ ...editStudentData, homeroomTeacher: e.target.value })} className="w-full px-3 py-2 border rounded-xl font-bold text-sm bg-slate-50 text-slate-800 outline-none shadow-sm focus:border-indigo-500 leading-none" /></div>
-                          <div className="space-y-1 text-left leading-none"><label className="text-[10px] text-slate-400 font-black leading-none">고교</label><input value={editStudentData.highSchool} onChange={(e) => setEditStudentData({ ...editStudentData, highSchool: e.target.value })} className="w-full px-3 py-2 border rounded-xl font-bold text-sm bg-slate-50 text-slate-800 outline-none shadow-sm focus:border-indigo-500 leading-none" /></div>
+                          <div className="space-y-1 text-left leading-none"><label className="text-[10px] text-slate-400 font-black leading-none">학교</label><input value={editStudentData.highSchool} onChange={(e) => setEditStudentData({ ...editStudentData, highSchool: e.target.value })} className="w-full px-3 py-2 border rounded-xl font-bold text-sm bg-slate-50 text-slate-800 outline-none shadow-sm focus:border-indigo-500 leading-none" /></div>
+                          <div className="space-y-1 text-left leading-none col-span-2">
+                            <label className="text-[10px] text-slate-400 font-black leading-none">학교 등급</label>
+                            <input value={editStudentData.schoolGrade} onChange={(e) => setEditStudentData({ ...editStudentData, schoolGrade: e.target.value })}
+                              placeholder="예: 1등급, A, 상위 10% 등 자유 입력"
+                              className="w-full px-3 py-2 border rounded-xl font-bold text-sm bg-slate-50 text-slate-800 outline-none shadow-sm focus:border-indigo-500 leading-none" />
+                          </div>
                         </div>
                         {/* 반 배정 - master/teacher 전용 */}
                         {classrooms.length > 0 && (
@@ -3323,6 +3331,10 @@ export default function App() {
                         <div className="space-y-3 flex-1 text-left leading-none">
                           <div className="flex items-center gap-2 text-left leading-none">
                             <span className="font-bold text-xl text-slate-800 leading-none">#{s.studentCode || '000'} {s.name}</span>
+                            {/* 학교 등급 뱃지 */}
+                            {userRole !== 'student' && s.schoolGrade && (
+                              <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-rose-100 text-rose-700 border border-rose-200">{s.schoolGrade}</span>
+                            )}
                             {/* 학년 뱃지 (중등) */}
                             {userRole !== 'student' && s.grade && (
                               <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-sky-100 text-sky-700 border border-sky-200">{s.grade}</span>
@@ -3361,7 +3373,7 @@ export default function App() {
                         </div>
                         {userRole === 'master' && (
                           <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 leading-none">
-                            <button onClick={() => { setEditStudentId(s.id); setEditStudentData({ name: s.name, studentCode: s.studentCode || '', homeroomTeacher: s.homeroomTeacher || '', highSchool: s.highSchool || '', group: s.group || '', classroomId: s.classroomId || '', grade: s.grade || '', middleClassId: s.middleClassId || '' }); }} className="p-2 text-indigo-500 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all shadow-sm leading-none"><Edit2 size={18} /></button>
+                            <button onClick={() => { setEditStudentId(s.id); setEditStudentData({ name: s.name, studentCode: s.studentCode || '', homeroomTeacher: s.homeroomTeacher || '', highSchool: s.highSchool || '', group: s.group || '', classroomId: s.classroomId || '', grade: s.grade || '', middleClassId: s.middleClassId || '', schoolGrade: s.schoolGrade || '' }); }} className="p-2 text-indigo-500 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all shadow-sm leading-none"><Edit2 size={18} /></button>
                             <button onClick={() => setConfirmDelete({ coll: 'students', id: s.id, label: s.name })} className="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition-all shadow-sm leading-none"><Trash2 size={18} /></button>
                           </div>
                         )}
