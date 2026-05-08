@@ -522,6 +522,8 @@ export default function App() {
   // 중등: 반 목록 (Firebase에서 로드)
   const [middleClasses, setMiddleClasses] = useState([]); // [{id, name, grade}]
   const [activeMiddleClass, setActiveMiddleClass] = useState(null);
+  const [addingMiddleClass, setAddingMiddleClass] = useState(false);
+  const [newMiddleClassName, setNewMiddleClassName] = useState('');
   const [matrixStatusFilter, setMatrixStatusFilter] = useState('all'); // 'all' | 'incomplete' | 'completed'
   const [collapsedStudents, setCollapsedStudents] = useState({}); // 모바일 학생 접기
   const [hiddenStudents, setHiddenStudents] = useState({}); // 모바일 학생 on/off
@@ -1260,31 +1262,28 @@ export default function App() {
                   </button>
                 ))}
                 {/* 반 추가/삭제 버튼 - master만 */}
-                {userRole === 'master' && (() => {
-                  const [addingClass, setAddingClass] = React.useState(false);
-                  const [newClassName, setNewClassName] = React.useState('');
-                  return addingClass ? (
-                    <div className="flex items-center gap-1">
-                      <input value={newClassName} onChange={e=>setNewClassName(e.target.value)}
-                        onKeyDown={async e => {
-                          if (e.key==='Enter' && newClassName.trim()) {
-                            await setDoc(doc(db,'artifacts',appId,'public','data','middleClasses','mc'+Date.now()), { name: newClassName.trim(), grade: gradeTab, sortOrder: middleClasses.length }, {merge:true});
-                            setNewClassName(''); setAddingClass(false);
-                          }
-                          if (e.key==='Escape') setAddingClass(false);
-                        }}
-                        placeholder="반 이름..." autoFocus
-                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold border-2 border-indigo-300 outline-none w-28 text-slate-700"/>
-                      <button onClick={async()=>{ if(newClassName.trim()) { await setDoc(doc(db,'artifacts',appId,'public','data','middleClasses','mc'+Date.now()),{name:newClassName.trim(),grade:gradeTab,sortOrder:middleClasses.length},{merge:true}); setNewClassName(''); setAddingClass(false); }}} className="px-2 py-1.5 rounded-xl bg-indigo-500 text-white text-xs font-black">+</button>
-                      <button onClick={()=>setAddingClass(false)} className="px-2 py-1.5 rounded-xl bg-slate-100 text-slate-500 text-xs font-black">✕</button>
-                    </div>
-                  ) : (
-                    <button onClick={()=>setAddingClass(true)}
-                      className="px-3 py-1.5 rounded-xl text-xs font-black border-2 border-dashed border-slate-300 text-slate-400 hover:border-slate-400 hover:text-slate-600 transition-all">
-                      + 반 추가
-                    </button>
-                  );
-                })()}
+                {userRole === 'master' && !addingMiddleClass && (
+                  <button onClick={() => setAddingMiddleClass(true)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-black border-2 border-dashed border-slate-300 text-slate-400 hover:border-slate-400 hover:text-slate-600 transition-all">
+                    + 반 추가
+                  </button>
+                )}
+                {userRole === 'master' && addingMiddleClass && (
+                  <div className="flex items-center gap-1">
+                    <input value={newMiddleClassName} onChange={e=>setNewMiddleClassName(e.target.value)}
+                      onKeyDown={async e => {
+                        if (e.key==='Enter' && newMiddleClassName.trim()) {
+                          await setDoc(doc(db,'artifacts',appId,'public','data','middleClasses','mc'+Date.now()), { name: newMiddleClassName.trim(), grade: gradeTab, sortOrder: middleClasses.length }, {merge:true});
+                          setNewMiddleClassName(''); setAddingMiddleClass(false);
+                        }
+                        if (e.key==='Escape') { setAddingMiddleClass(false); setNewMiddleClassName(''); }
+                      }}
+                      placeholder="반 이름..." autoFocus
+                      className="px-2.5 py-1.5 rounded-xl text-xs font-bold border-2 border-indigo-300 outline-none w-28 text-slate-700"/>
+                    <button onClick={async()=>{ if(newMiddleClassName.trim()) { await setDoc(doc(db,'artifacts',appId,'public','data','middleClasses','mc'+Date.now()),{name:newMiddleClassName.trim(),grade:gradeTab,sortOrder:middleClasses.length},{merge:true}); setNewMiddleClassName(''); setAddingMiddleClass(false); }}} className="px-2 py-1.5 rounded-xl bg-indigo-500 text-white text-xs font-black">+</button>
+                    <button onClick={()=>{ setAddingMiddleClass(false); setNewMiddleClassName(''); }} className="px-2 py-1.5 rounded-xl bg-slate-100 text-slate-500 text-xs font-black">✕</button>
+                  </div>
+                )}
                 {/* 현재 반 삭제 */}
                 {userRole === 'master' && activeMiddleClass && (
                   <button onClick={async()=>{ if(confirm('이 반을 삭제할까요?')) { await deleteDoc(doc(db,'artifacts',appId,'public','data','middleClasses',activeMiddleClass)); setActiveMiddleClass(null); }}}
