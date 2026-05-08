@@ -523,6 +523,8 @@ export default function App() {
   // 중등: 반 목록 (Firebase에서 로드)
   const [middleClasses, setMiddleClasses] = useState([]); // [{id, name, grade}]
   const [activeMiddleClass, setActiveMiddleClass] = useState(null);
+  const [addingMiddleClass, setAddingMiddleClass] = useState(false);
+  const [newMiddleClassName, setNewMiddleClassName] = useState('');
   const [matrixStatusFilter, setMatrixStatusFilter] = useState('all'); // 'all' | 'incomplete' | 'completed'
   const [collapsedStudents, setCollapsedStudents] = useState({}); // 모바일 학생 접기
   const [hiddenStudents, setHiddenStudents] = useState({}); // 모바일 학생 on/off
